@@ -85,10 +85,15 @@ class RobotMap extends Component {
     private sourceMap: any;
 
     getDist(id: ID): number {
-        let n1: Node | null = this.sourceMap.get(id);
+        let n1 = this.sourceMap.get(id);
         if (!n1) return Infinity;
-        let {distance, x, y} = n1;
-        return distance + Math.sqrt((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2);
+
+        let {cost, x, y, parent} = n1;
+        let np = this.sourceMap.get(parent);
+        if (!np) return Infinity;
+
+        let {distance} = n1;
+        return distance + cost + Math.sqrt((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2);
     };
 
     componentDidMount() {
@@ -96,12 +101,12 @@ class RobotMap extends Component {
         let {width, height} = this.mapCanvas;
         ctx.font = "bold 20px ComicSans";
         ctx.fillStyle = 'rgb(200,0,0)';
-        ctx.fillText("some some some", 20, 50);
+        ctx.fillText("some some some", 2, 2);
         const {data} = ctx.getImageData(0, 0, width, height);
 
-        let sourceMap = new SourceMap(data);
+        this.sourceMap = new SourceMap(data);
 
-        let curNode: Node | null = sourceMap.get("0,0");
+        let curNode: Node | null = this.sourceMap.get("0,0");
         if (!curNode) return;
 
         curNode.distance = 0;
@@ -114,6 +119,8 @@ class RobotMap extends Component {
         ctx.lineTo(MAX_WIDTH + 1, MAX_HEIGHT + 1);
         ctx.stroke();
 
+        debugger;
+
         let iii = 0;
 
         omg:
@@ -122,38 +129,27 @@ class RobotMap extends Component {
                 //process the closest point
 
                 //find the best candidate
-                let shortDist = Infinity;
-                let curID = Object.keys(this.openList)[0];
-                for (let ndID in this.openList) {
-                    let nd = sourceMap.get(ndID);
-                    if (!nd) continue;
-
-                    let {distance, x, y} = nd;
-                    let g = distance;
-                    let h = Math.sqrt((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2);
-                    if (shortDist > g + h) {
-                        shortDist = g + h;
-                        curID = ndID;
-                    }
-                }
+                let curID = this.leaveOpenList();
                 if (!curID) return;
-                this.leaveOpenList(curID);
 
                 //curID's neighbours go to the openlist.
-                const curNode = sourceMap.get(curID);
+                const curNode = this.sourceMap.get(curID);
                 if (!curNode) return;
 
-                for (let id of sourceMap.neighbours(curID)) {
-                    // if the node is processed, move on to next node.
-                    if (this.closeList[id]) continue;
+                for (let id of this.sourceMap.neighbours(curID)) {
+                    const nd = this.sourceMap.get(id);
+                    if (!nd) continue;
+
+                    let {cost} = nd;
+                    if (cost === Infinity) continue;
 
                     iii++;
                     if (iii > 10000) break omg;
 
                     this.enterOpenList(id);
-                    const nd = sourceMap.get(id);
-                    if (!nd) continue;
+
                     if (nd.x === MAX_WIDTH && nd.y === MAX_HEIGHT) break omg;
+
                     nd.parent = curID;
                     nd.distance = curNode.distance + nd.cost;
 
@@ -171,10 +167,13 @@ class RobotMap extends Component {
         this.minHeap.push(id);
     };
 
-    private leaveOpenList(id: ID) {
+    private leaveOpenList() {
+        let id = this.minHeap.pop();
+        if (!id) return;
+
         delete this.openList[id];
         this.closeList[id] = 1;
-        return this.minHeap.pop();
+        return id;
     };
 
     render() {
