@@ -13,8 +13,8 @@ type Node = {
 
 type ID = string;
 
-const MAX_WIDTH = 200, MAX_HEIGHT = 200;
-const destX = 100, destY = 200;
+let MAX_WIDTH: number, MAX_HEIGHT: number;
+const destX = 299, destY = 299;
 
 class SourceMap {
     private readonly data: number[];
@@ -93,12 +93,6 @@ class RobotMap extends Component {
         let np = this.sourceMap.get(parent) || {};
         let {distance = 0, x: px, y: py} = np;
 
-        // console.log(JSON.stringify({
-        //     cur: n1,
-        //     prt: np,
-        //     dist: distance + cost + Math.sqrt((x - destX) ** 2 + (y - destY) ** 2)
-        // }));
-        // debugger;
         // return distance + cost + ((x - destX) ** 2 + (y - destY) ** 2);
         // return distance + cost + Math.sqrt((x - destX) ** 2 + (y - destY) ** 2);
         // return distance + cost + Math.abs(x - destX) + Math.abs(y - destY);
@@ -108,11 +102,30 @@ class RobotMap extends Component {
     componentDidMount() {
         const ctx = this.mapCanvas.getContext('2d');
         let {width, height} = this.mapCanvas;
-        ctx.font = "bold 20px ComicSans";
+        ctx.font = "bold 50px ComicSans";
         ctx.fillStyle = 'rgb(255,0,0)';
-        ctx.fillText("ABCDE", -1, 20);
-        // ctx.fillText("return distance + cost + Math.abs(x - destX) + Math.abs(y - destY);", -1, 100);
-        const {data} = ctx.getImageData(0, 0, width, height);
+        ctx.fillText("ABCDEF", -1, 60);
+        ctx.fillText("XXABCDEF", -1, 120);
+        ctx.fillText("VVVVSABCDEF", -1, 180);
+
+        // ctx.fillText("VVVABCDEF", -1, 60);
+        // ctx.fillText("ABCVVVVVVDEF", -1, 120);
+        // ctx.fillText("SABVVVVVVVCDEF", -1, 180);
+
+        const imageData = ctx.getImageData(0, 0, width, height);
+        let {data, width: w2, height: h2} = imageData;
+        MAX_WIDTH = w2;
+        MAX_HEIGHT = h2;
+        let d2 = data.map((x: any) => x);
+        console.log({w2, width, height, h2});
+
+        // for (let i = 0; i < data.length; i += 4) {
+        //     data[i + 0] = 255 - data[i + 0];
+        //     data[i + 1] = 255 - data[i + 1];
+        //     data[i + 2] = 255 - data[i + 2];
+        //     data[i + 3] = 255;
+        // }
+        // ctx.putImageData(imageData, 0, 0);
 
         this.sourceMap = new SourceMap(data);
 
@@ -128,7 +141,6 @@ class RobotMap extends Component {
             while (!isEmpty(this.openList)) {
                 //find minimum value from the openlist
                 //process the closest point
-
                 //find the best candidate
                 let curID = this.leaveOpenList();
                 if (!curID) return;
@@ -147,8 +159,7 @@ class RobotMap extends Component {
                     if (cost === Infinity) continue;
                     if (this.closeList[id]) continue;
 
-                    iii++;
-                    if (iii > 10000) break omg;
+                    if (iii++ > 100000) break omg;
 
                     this.enterOpenList(curID, id);
 
@@ -156,11 +167,24 @@ class RobotMap extends Component {
 
                     nd.distance = distance + nd.cost;
 
-                    ctx.moveTo(nd.x, nd.y);
-                    ctx.lineTo(nd.x - 1, nd.y - 1);
-                    ctx.stroke();
+                    let {x, y} = nd;
+                    d2[((y * MAX_WIDTH) + x) * 4 + 1] = 80;
+                    d2[((y * MAX_WIDTH) + x) * 4 + 3] = 100;
                 }
             }
+
+        for (let id = `${destX},${destY}`; id;) {
+            let {parent, x, y} = this.sourceMap.get(id);
+            d2[((y * MAX_WIDTH) + x) * 4 + 2] = 100;
+            d2[((y * MAX_WIDTH) + x) * 4 + 3] = 255;
+            id = parent;
+        }
+
+        for (let i = 0; i < data.length * 4; i++) {
+            data[i] = d2[i];
+        }
+
+        ctx.putImageData(imageData, 0, 0);
     }
 
     render() {
@@ -187,15 +211,9 @@ class RobotMap extends Component {
         let id = ids[0];
         if (!id) return;
 
-        let d1 = this.getDist(id);
-        let d2 = this.getDist(ids[ids.length - 1]);
-        console.log("distance: " + JSON.stringify({d1, d2}));
-
         delete this.openList[id];
         this.closeList[id] = 1;
 
-        console.log(JSON.stringify({closeList: Object.keys(this.closeList), openList: Object.keys(this.openList)}));
-        debugger;
         return id;
     };
 
