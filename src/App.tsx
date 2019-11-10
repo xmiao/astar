@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import './App.css';
+import {MinHeap} from './minheap';
 
 type Node = {
     id: ID;
@@ -12,7 +13,7 @@ type Node = {
 
 type ID = string;
 
-const MAX_WIDTH = 500, MAX_HEIGHT = 500;
+const MAX_WIDTH = 200, MAX_HEIGHT = 200;
 
 class SourceMap {
     private readonly data: number[];
@@ -72,9 +73,25 @@ function isEmpty(o: any) {
 
 class RobotMap extends Component {
     private mapCanvas: any;
+    minHeap = new MinHeap([], (id1: ID, id2: ID) => {
+        let d1 = this.getDist(id1);
+        let d2 = this.getDist(id1);
+        if (d1 === d2) return 0;
+        if (d1 < d2) return -1;
+        return 1;
+    });
+    private openList = {} as any;
+    private closeList = {} as any;
+    private sourceMap: any;
+
+    getDist(id: ID): number {
+        let n1: Node | null = this.sourceMap.get(id);
+        if (!n1) return Infinity;
+        let {distance, x, y} = n1;
+        return distance + Math.sqrt((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2);
+    };
 
     componentDidMount() {
-        debugger;
         const ctx = this.mapCanvas.getContext('2d');
         let {width, height} = this.mapCanvas;
         ctx.font = "bold 20px ComicSans";
@@ -87,62 +104,78 @@ class RobotMap extends Component {
         let curNode: Node | null = sourceMap.get("0,0");
         if (!curNode) return;
 
-        let openList = {} as any;
-        let closeList = {} as any;
         curNode.distance = 0;
         curNode.parent = "";
         curNode.cost = 0;
 
-        openList[curNode.id] = 1;
+        this.enterOpenList(curNode.id);
+
+        ctx.moveTo(MAX_WIDTH, MAX_HEIGHT);
+        ctx.lineTo(MAX_WIDTH + 1, MAX_HEIGHT + 1);
+        ctx.stroke();
+
+        let iii = 0;
 
         omg:
-            while (!isEmpty(openList)) {
+            while (!isEmpty(this.openList)) {
                 //find minimum value from the openlist
                 //process the closest point
 
                 //find the best candidate
                 let shortDist = Infinity;
-                let curID = Object.keys(openList)[0];
-                for (let ndID in openList) {
-                    if (!openList.hasOwnProperty(ndID)) continue;
+                let curID = Object.keys(this.openList)[0];
+                for (let ndID in this.openList) {
                     let nd = sourceMap.get(ndID);
                     if (!nd) continue;
 
                     let {distance, x, y} = nd;
                     let g = distance;
-                    let h = Math.abs(MAX_WIDTH - x) + Math.abs(MAX_HEIGHT - y);
-                    if (shortDist < g + h) {
+                    let h = Math.sqrt((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2);
+                    if (shortDist > g + h) {
                         shortDist = g + h;
                         curID = ndID;
                     }
                 }
                 if (!curID) return;
-                delete openList[curID];
-                closeList[curID] = 1;
+                this.leaveOpenList(curID);
 
                 //curID's neighbours go to the openlist.
                 const curNode = sourceMap.get(curID);
                 if (!curNode) return;
 
-                let i = 0;
                 for (let id of sourceMap.neighbours(curID)) {
                     // if the node is processed, move on to next node.
-                    if (closeList[id]) continue;
+                    if (this.closeList[id]) continue;
 
-                    i++;
-                    if (i++ > 1000) break omg;
+                    iii++;
+                    if (iii > 10000) break omg;
 
-                    openList[id] = 1;
+                    this.enterOpenList(id);
                     const nd = sourceMap.get(id);
                     if (!nd) continue;
-
+                    if (nd.x === MAX_WIDTH && nd.y === MAX_HEIGHT) break omg;
                     nd.parent = curID;
                     nd.distance = curNode.distance + nd.cost;
+
+                    ctx.moveTo(nd.x, nd.y);
+                    ctx.lineTo(nd.x + 1, nd.y + 1);
+                    ctx.stroke();
                 }
-
             }
-
     }
+
+    private enterOpenList(id: ID) {
+        if (this.closeList[id]) return;
+        // delete this.closeList[id];
+        this.openList[id] = 1;
+        this.minHeap.push(id);
+    };
+
+    private leaveOpenList(id: ID) {
+        delete this.openList[id];
+        this.closeList[id] = 1;
+        return this.minHeap.pop();
+    };
 
     render() {
         const self = this;
