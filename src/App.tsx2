@@ -54,7 +54,7 @@ class SourceMap {
         if (!nd) return [];
 
         let {x, y} = nd;
-        return [[0, -1, 1], [1, 0, 1], [0, 1, 1], [-1, 0, 1], [1, 1, 1.414], [-1, -1, 1.414], [1, -1, 1.414], [-1, 1, 1.414]]
+        return [[0, -1], [1, 0], [0, 1], [-1, 0]]
             .map(([dx, dy]) => {
                 let tmpNode = this.get(`${x + dx},${y + dy}`);
                 if (!tmpNode) return '';
@@ -76,7 +76,7 @@ class RobotMap extends Component {
     minHeap = new MinHeap([], (id1: ID, id2: ID) => {
         let d1 = this.getDist(id1);
         let d2 = this.getDist(id2);
-        // if (d1 === d2) return 0;
+        if (d1 === d2) return 0;
         if (d1 < d2) return -1;
         return 1;
     });
@@ -92,20 +92,27 @@ class RobotMap extends Component {
         let np = this.sourceMap.get(parent) || {};
         let {distance = 0, x: px, y: py} = np;
 
-        // console.log(JSON.stringify({
-        //     cur: n1,
-        //     prt: np,
-        //     dist: distance + cost + Math.sqrt((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2)
-        // }));
-        // debugger;
-        return distance + cost + ((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2);
+        console.log(JSON.stringify({
+            prt: {
+                distance,
+                parent,
+                x: px, y: py
+            },
+            cur: {
+                x, y,
+                dist: distance + cost + Math.sqrt((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2)
+            }
+        }));
+        debugger;
+
+        return distance + cost + Math.sqrt((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2);
     };
 
     componentDidMount() {
         const ctx = this.mapCanvas.getContext('2d');
         let {width, height} = this.mapCanvas;
         ctx.font = "bold 20px ComicSans";
-        ctx.fillStyle = 'rgb(255,0,0)';
+        ctx.fillStyle = 'rgb(200,0,0)';
         ctx.fillText("ABCDE", -1, 20);
         const {data} = ctx.getImageData(0, 0, width, height);
 
@@ -116,6 +123,10 @@ class RobotMap extends Component {
 
         curNode.distance = 0;
         this.enterOpenList('', curNode.id);
+
+        ctx.moveTo(MAX_WIDTH, MAX_HEIGHT);
+        ctx.lineTo(MAX_WIDTH + 1, MAX_HEIGHT + 1);
+        ctx.stroke();
 
         let iii = 0;
 
@@ -171,35 +182,22 @@ class RobotMap extends Component {
     }
 
     private leaveOpenList() {
-        let ids = Object.keys(this.openList)
-            .sort((id1: ID, id2: ID) => {
-                let d1 = this.getDist(id1);
-                let d2 = this.getDist(id2);
-                if (d1 === d2) return 0;
-                if (d1 < d2) return -1;
-                return 1;
-            });
-        let id = ids[0];
+        let id = this.minHeap.pop();
         if (!id) return;
-
-        let d1 = this.getDist(id);
-        let d2 = this.getDist(ids[ids.length - 1]);
-        console.log("distance: " + JSON.stringify({d1, d2}));
 
         delete this.openList[id];
         this.closeList[id] = 1;
-
-        console.log(JSON.stringify({closeList: Object.keys(this.closeList), openList: Object.keys(this.openList)}));
-        debugger;
         return id;
     };
 
     private enterOpenList(parentID: ID, id: ID) {
-        if (this.closeList[id] || this.closeList[id]) return;
+        if (this.closeList[id]) return;
+        // delete this.closeList[id];
         const nd = this.sourceMap.get(id);
         nd.parent = parentID;
 
         this.openList[id] = 1;
+        this.minHeap.push(id);
     };
 }
 

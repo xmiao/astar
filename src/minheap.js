@@ -140,6 +140,7 @@ export function MinHeap(array, comparator) {
 MinHeap.prototype.push = function (item) {
     this.heap.push(item);
     this.siftUp(this.heap.length - 1);
+    console.log(`push: ${item}, heap: ${JSON.stringify(this.heap)}`);
 };
 
 /**
@@ -167,6 +168,7 @@ MinHeap.prototype.pop = function () {
     } else {
         value = this.heap.pop();
     }
+    console.log("after pop: " + JSON.stringify(this.heap));
     return value;
 };
 
