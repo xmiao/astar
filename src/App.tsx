@@ -74,6 +74,7 @@ class RobotMap extends Component {
     private mapCanvas: any;
 
     componentDidMount() {
+        debugger;
         const ctx = this.mapCanvas.getContext('2d');
         let {width, height} = this.mapCanvas;
         ctx.font = "bold 20px ComicSans";
@@ -94,47 +95,52 @@ class RobotMap extends Component {
 
         openList[curNode.id] = 1;
 
-        while (!isEmpty(openList)) {
-            //find minimum value from the openlist
-            //process the closest point
+        omg:
+            while (!isEmpty(openList)) {
+                //find minimum value from the openlist
+                //process the closest point
 
-            //find the best candidate
-            let shortDist = Infinity;
-            let curID = '';
-            for (let ndID in openList) {
-                if (!openList.hasOwnProperty(ndID)) continue;
-                let nd = sourceMap.get(ndID);
-                if (!nd) continue;
+                //find the best candidate
+                let shortDist = Infinity;
+                let curID = Object.keys(openList)[0];
+                for (let ndID in openList) {
+                    if (!openList.hasOwnProperty(ndID)) continue;
+                    let nd = sourceMap.get(ndID);
+                    if (!nd) continue;
 
-                let {distance, x, y} = nd;
-                let g = distance;
-                let h = Math.abs(MAX_WIDTH - x) + Math.abs(MAX_HEIGHT - y);
-                if (shortDist < g + h) {
-                    shortDist = g + h;
-                    curID = ndID;
+                    let {distance, x, y} = nd;
+                    let g = distance;
+                    let h = Math.abs(MAX_WIDTH - x) + Math.abs(MAX_HEIGHT - y);
+                    if (shortDist < g + h) {
+                        shortDist = g + h;
+                        curID = ndID;
+                    }
                 }
+                if (!curID) return;
+                delete openList[curID];
+                closeList[curID] = 1;
+
+                //curID's neighbours go to the openlist.
+                const curNode = sourceMap.get(curID);
+                if (!curNode) return;
+
+                let i = 0;
+                for (let id of sourceMap.neighbours(curID)) {
+                    // if the node is processed, move on to next node.
+                    if (closeList[id]) continue;
+
+                    i++;
+                    if (i++ > 1000) break omg;
+
+                    openList[id] = 1;
+                    const nd = sourceMap.get(id);
+                    if (!nd) continue;
+
+                    nd.parent = curID;
+                    nd.distance = curNode.distance + nd.cost;
+                }
+
             }
-            if (!curID) return;
-            delete openList[curID];
-            closeList[curID] = 1;
-
-            //curID's neighbours go to the openlist.
-            const curNode = sourceMap.get(curID);
-            if (!curNode) return;
-
-            for (let id of sourceMap.neighbours(curID)) {
-                // if the node is processed, move on to next node.
-                if (closeList[id]) continue;
-
-                openList.push(id);
-                const nd = sourceMap.get(id);
-                if (!nd) continue;
-
-                nd.parent = curID;
-                nd.distance = curNode.distance + nd.cost;
-            }
-
-        }
 
     }
 
