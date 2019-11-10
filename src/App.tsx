@@ -98,7 +98,10 @@ class RobotMap extends Component {
         //     dist: distance + cost + Math.sqrt((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2)
         // }));
         // debugger;
-        return distance + cost + ((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2);
+        // return distance + cost + ((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2);
+        // return distance + cost + Math.sqrt((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2);
+        // return distance + cost + Math.abs(x - MAX_WIDTH) + Math.abs(y - MAX_HEIGHT);
+        return distance + cost + Math.abs(x - MAX_WIDTH) + Math.abs(y - MAX_HEIGHT);
     };
 
     componentDidMount() {
@@ -107,6 +110,7 @@ class RobotMap extends Component {
         ctx.font = "bold 20px ComicSans";
         ctx.fillStyle = 'rgb(255,0,0)';
         ctx.fillText("ABCDE", -1, 20);
+        // ctx.fillText("return distance + cost + Math.abs(x - MAX_WIDTH) + Math.abs(y - MAX_HEIGHT);", -1, 100);
         const {data} = ctx.getImageData(0, 0, width, height);
 
         this.sourceMap = new SourceMap(data);
@@ -143,11 +147,11 @@ class RobotMap extends Component {
                     if (this.closeList[id]) continue;
 
                     iii++;
-                    if (iii > 10000) break omg;
+                    // if (iii > 10000) break omg;
 
                     this.enterOpenList(curID, id);
 
-                    if (nd.x === MAX_WIDTH && nd.y === MAX_HEIGHT) break omg;
+                    if (nd.x === (MAX_WIDTH - 1) && nd.y === (MAX_HEIGHT - 1)) break omg;
 
                     nd.distance = distance + nd.cost;
 
