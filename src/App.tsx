@@ -1,25 +1,31 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {Component} from 'react';
 import './App.css';
+
+class RobotMap extends Component {
+    private mapCanvas: any;
+
+    componentDidMount() {
+        const ctx = this.mapCanvas.getContext('2d');
+        ctx.fillStyle = 'rgb(200,0,0)';
+        ctx.fillText("some some some", 100, 100);
+    }
+
+    render() {
+        const self = this;
+        return (
+            <div className="rootContent">
+                Demonstrating the A* path finding algorithm
+                <canvas width="500px" height="500px" className="robotMap" ref={(r) => {
+                    self.mapCanvas = r;
+                }}/>
+            </div>
+        );
+    }
+}
 
 const App: React.FC = () => {
     return (
-        <div className="App">
-            <header className="App-header">
-                <img src={logo} className="App-logo" alt="logo"/>
-                <p>
-                    Edit <code>src/App.tsx</code> and save to reload.
-                </p>
-                <a
-                    className="App-link"
-                    href="https://reactjs.org"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    Learn React some some some
-                </a>
-            </header>
-        </div>
+        <RobotMap/>
     );
 };
 
