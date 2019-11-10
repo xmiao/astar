@@ -90,7 +90,20 @@ class RobotMap extends Component {
 
         let {cost, x, y, parent} = n1;
         let np = this.sourceMap.get(parent) || {};
-        let {distance = 0} = np;
+        let {distance = 0, x: px, y: py} = np;
+
+        console.log(JSON.stringify({
+            prt: {
+                distance,
+                parent,
+                x: px, y: py
+            },
+            cur: {
+                x, y,
+                dist: distance + cost + Math.sqrt((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2)
+            }
+        }));
+        debugger;
 
         return distance + cost + Math.sqrt((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2);
     };
@@ -138,6 +151,7 @@ class RobotMap extends Component {
 
                     let {cost} = nd;
                     if (cost === Infinity) continue;
+                    if (this.closeList[id]) continue;
 
                     iii++;
                     if (iii > 10000) break omg;
