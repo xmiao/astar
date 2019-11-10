@@ -192,7 +192,7 @@ MinHeap.prototype.getMin = function () {
 
 /**
  * Return the current number of elements within the heap.
- * @returns size of the heap.
+ * @returns number of the heap.
  * @function
  */
 MinHeap.prototype.size = function () {

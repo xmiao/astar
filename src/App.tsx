@@ -29,7 +29,7 @@ class SourceMap {
         if (nd) return nd;
 
         let [sx, sy] = id.split(",");
-        let [x, y] = [+sx, +sy];
+        let [x, y] = [sx, sy].map(x => +x || 0);
         if (x < 0 || y < 0 || x >= MAX_WIDTH || y >= MAX_HEIGHT) return null;
         id = `${x},${y}`;
         nd = nodeMap[id];
@@ -75,7 +75,7 @@ class RobotMap extends Component {
     private mapCanvas: any;
     minHeap = new MinHeap([], (id1: ID, id2: ID) => {
         let d1 = this.getDist(id1);
-        let d2 = this.getDist(id1);
+        let d2 = this.getDist(id2);
         if (d1 === d2) return 0;
         if (d1 < d2) return -1;
         return 1;
@@ -89,10 +89,9 @@ class RobotMap extends Component {
         if (!n1) return Infinity;
 
         let {cost, x, y, parent} = n1;
-        let np = this.sourceMap.get(parent);
-        if (!np) return Infinity;
+        let np = this.sourceMap.get(parent) || {};
+        let {distance = 0} = np;
 
-        let {distance} = n1;
         return distance + cost + Math.sqrt((x - MAX_WIDTH) ** 2 + (y - MAX_HEIGHT) ** 2);
     };
 
@@ -101,7 +100,7 @@ class RobotMap extends Component {
         let {width, height} = this.mapCanvas;
         ctx.font = "bold 20px ComicSans";
         ctx.fillStyle = 'rgb(200,0,0)';
-        ctx.fillText("some some some", 2, 2);
+        ctx.fillText("ABCDE", -1, 20);
         const {data} = ctx.getImageData(0, 0, width, height);
 
         this.sourceMap = new SourceMap(data);
@@ -110,16 +109,11 @@ class RobotMap extends Component {
         if (!curNode) return;
 
         curNode.distance = 0;
-        curNode.parent = "";
-        curNode.cost = 0;
-
-        this.enterOpenList(curNode.id);
+        this.enterOpenList('', curNode.id);
 
         ctx.moveTo(MAX_WIDTH, MAX_HEIGHT);
         ctx.lineTo(MAX_WIDTH + 1, MAX_HEIGHT + 1);
         ctx.stroke();
-
-        debugger;
 
         let iii = 0;
 
@@ -136,6 +130,8 @@ class RobotMap extends Component {
                 const curNode = this.sourceMap.get(curID);
                 if (!curNode) return;
 
+                let {distance} = curNode;
+
                 for (let id of this.sourceMap.neighbours(curID)) {
                     const nd = this.sourceMap.get(id);
                     if (!nd) continue;
@@ -146,26 +142,30 @@ class RobotMap extends Component {
                     iii++;
                     if (iii > 10000) break omg;
 
-                    this.enterOpenList(id);
+                    this.enterOpenList(curID, id);
 
                     if (nd.x === MAX_WIDTH && nd.y === MAX_HEIGHT) break omg;
 
-                    nd.parent = curID;
-                    nd.distance = curNode.distance + nd.cost;
+                    nd.distance = distance + nd.cost;
 
                     ctx.moveTo(nd.x, nd.y);
-                    ctx.lineTo(nd.x + 1, nd.y + 1);
+                    ctx.lineTo(nd.x - 1, nd.y - 1);
                     ctx.stroke();
                 }
             }
     }
 
-    private enterOpenList(id: ID) {
-        if (this.closeList[id]) return;
-        // delete this.closeList[id];
-        this.openList[id] = 1;
-        this.minHeap.push(id);
-    };
+    render() {
+        const self = this;
+        return (
+            <div className="rootContent">
+                Demonstrating the A* path finding algorithm
+                <canvas width="300px" height="300px" className="robotMap" ref={(r) => {
+                    self.mapCanvas = r;
+                }}/>
+            </div>
+        );
+    }
 
     private leaveOpenList() {
         let id = this.minHeap.pop();
@@ -176,17 +176,15 @@ class RobotMap extends Component {
         return id;
     };
 
-    render() {
-        const self = this;
-        return (
-            <div className="rootContent">
-                Demonstrating the A* path finding algorithm
-                <canvas width="500px" height="500px" className="robotMap" ref={(r) => {
-                    self.mapCanvas = r;
-                }}/>
-            </div>
-        );
-    }
+    private enterOpenList(parentID: ID, id: ID) {
+        if (this.closeList[id]) return;
+        // delete this.closeList[id];
+        const nd = this.sourceMap.get(id);
+        nd.parent = parentID;
+
+        this.openList[id] = 1;
+        this.minHeap.push(id);
+    };
 }
 
 const App: React.FC = () => {

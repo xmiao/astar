@@ -4,6 +4,7 @@
     <list default="true" id="49607ebc-2e6c-4f38-a58b-6c593c1000e2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/minheap.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/minheap.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -66,7 +67,7 @@
       <updated>1573358450580</updated>
       <workItem from="1573358455018" duration="652000" />
       <workItem from="1573359150370" duration="15911000" />
-      <workItem from="1573375917527" duration="5696000" />
+      <workItem from="1573375917527" duration="8534000" />
     </task>
     <task id="LOCAL-00001" summary="initial version.">
       <created>1573358564961</created>
@@ -131,7 +132,14 @@
       <option name="project" value="LOCAL" />
       <updated>1573382880240</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="initial version.">
+      <created>1573383688670</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1573383688670</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
